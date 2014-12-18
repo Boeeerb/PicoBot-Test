@@ -5,15 +5,14 @@
 #define CE_PIN 8
 #define CSN_PIN 7
 
-####################### Configuration ##############################
-## lightintense needs changing to environment to find other Picos ##
-## BotID is manually assigned to each, first will be 0, next is 1 ##
-####################################################################
+/*####################### Configuration ############################
+ ## lightintense needs changing to environment to find other Picos ##
+ ## BotID is manually assigned to each, first will be 0, next is 1 ##
+ ##################################################################*/
 int lightintense = 400;
 const int BotID = 0;
 
-const uint64_t pipes[4] = { 
-  0xABCDABCD71LL, 0xABCDABCD61LL, 0xABCDABCD51LL, 0xABCDABCD41LL };
+
 const uint64_t srvpipe = 0xe8e8f0f0e1LL;
 RF24 radio(CE_PIN, CSN_PIN);
 
@@ -41,6 +40,14 @@ int data;
 int count = 0;
 int colour = 0;
 
+
+//String localpipe = get_pipe();
+uint64_t localpipe = get_pipe();
+
+//uint64_t local64 = localpipe.toInt();
+
+const uint64_t pipes[4] = { localpipe, 0xABCDABCD61LL, 0xABCDABCD51LL, 0xABCDABCD41LL };
+
 void setup() {
   digitalWrite(A0, HIGH);
   digitalWrite(A1, HIGH);
@@ -49,10 +56,12 @@ void setup() {
   pinMode(motor2a, OUTPUT); 
   pinMode(motor2b, OUTPUT);
   pinMode(white, OUTPUT);
-   
+
   pinMode(redled, OUTPUT); 
   pinMode(greled, OUTPUT);
   pinMode(bluled, OUTPUT);
+
+
 
   Serial.begin(9600);
   radio.begin();
@@ -62,8 +71,7 @@ void setup() {
   radio.setDataRate(RF24_250KBPS);
   radio.setPayloadSize(32);
   radio.openWritingPipe(srvpipe);
-  radio.openReadingPipe(1,pipes[BotID]);
-
+  radio.openReadingPipe(1,pipes[0]);
   digitalWrite(motor1a, LOW);
   digitalWrite(motor2a, LOW);
 }
@@ -73,9 +81,23 @@ void loop()
 
   if ( role == 0 ) {
     digitalWrite(6, HIGH);
-    blah[0] = BotID+1;
+    //blah[0] = BotID+1;
     radio.stopListening();
-    radio.write( &blah, sizeof(blah) );
+
+    //char* msg = "0xABCDABCD71LL";
+
+    String local = "NEW "+localpipe;
+    Serial.println(local);
+
+    char buf[32];
+    local.toCharArray(buf,32);
+    //buf.toCharArray(local,32);
+    radio.write(buf, strlen(buf));
+
+    //radio.write((uint8_t*)msg,sizeof(msg));
+    //radio.write(msg,sizeof(msg));
+
+    //radio.write( &blah, sizeof(blah) );
     digitalWrite(6, LOW);
     radio.startListening();
     while ( count < 100 ) {
@@ -109,17 +131,17 @@ void loop()
   else {
 
     if ( colour == 1 ) {
-        digitalWrite(redled, HIGH);
+      digitalWrite(redled, HIGH);
     }
     if ( colour == 2 ) {
-        digitalWrite(greled, HIGH);
+      digitalWrite(greled, HIGH);
     }
     if ( colour == 3 ) {
-        digitalWrite(bluled, HIGH);
+      digitalWrite(bluled, HIGH);
     }
     if ( colour == 4 ) {
-        digitalWrite(redled, HIGH);
-        digitalWrite(greled, HIGH);
+      digitalWrite(redled, HIGH);
+      digitalWrite(greled, HIGH);
     }
 
 
@@ -187,6 +209,36 @@ void distance(int &ret) {
 
   ret = duration / 29 / 2;
 
+}
+
+
+uint64_t get_pipe() {
+  /*
+  uint64_t ul1 = String(random(10,99), HEX);
+   uint64_t ul2 = String(random(10,99), HEX);
+   uint64_t ul3 = String(random(10,99), HEX);
+   uint64_t ul4 = String(random(10,99), HEX);
+   uint64_t ul5 = String(random(10,99), HEX);
+   
+   
+   uint64_t ul = ul1 + ul2 + ul3 + ul4 + ul5;
+   if ( ul.length() == 9 ) {
+   ul = ul + "0";
+   }
+   if ( ul.length() == 8 ) {
+   ul = ul + "00";
+   }
+   if ( ul.length() == 7 ) {
+   ul = ul + "000";
+   }
+   return "0xABCDABCD71LL";*/
+
+
+
+  uint64_t result = 0xABCDABCD61ULL;
+  return result;
+
+  //return ul;
 }
 
 

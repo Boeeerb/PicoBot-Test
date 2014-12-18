@@ -1,6 +1,7 @@
 from nrf24 import NRF24
 import time
 from time import gmtime, strftime
+import re
 
 #pipes = [[0xf0, 0xf0, 0xf0, 0xf0, 0xd2],[0xf0, 0xf0, 0xF0, 0xF0, 0xf0]]
 pipes = [[0xab, 0xcd, 0xab, 0xcd, 0x71],[0xab, 0xcd, 0xab, 0xcd, 0x61],[0xab, 0xcd, 0xab, 0xcd, 0x51],[0xab, 0xcd, 0xab, 0xcd, 0x41]]
@@ -14,7 +15,7 @@ radio.setChannel(0x4c)
 radio.setDataRate(NRF24.BR_250KBPS)
 radio.setPALevel(NRF24.PA_MAX)
 radio.setAutoAck(1)
-radio.openWritingPipe(pipes[0])
+#radio.openWritingPipe(pipes[0])
 radio.openReadingPipe(1,serverpipe)
 
 radio.startListening()
@@ -30,34 +31,41 @@ while True:
     radio.startListening()
     recv_buffer = []
     radio.read(recv_buffer)
-    if ( recv_buffer[0] == 1 ):
-      #0xABCDABCD71LL
+    out = ''.join(chr(i) for i in recv_buffer)
+    cmd = out.strip().split()
+    if cmd[0] == "NEW":
+
+      print "New device: "+cmd[1]
+
+#      blah = re.findall(r'.{1,2}',cmd[1],re.DOTALL)
+#      print blah[1]
+
+      pipe = cmd[1][2:12]  # Strip 0x and LL from address and reply with chr 6
+      
+      pipe = map(ord, pipe.decode('hex'))
+
+
+#      packet=[ for p in packet]
+
+#      packet=[str(p).decode("hex") for p in packet]
+#      packet=[int(p,16) for p in packet]
+#      print packet
+#      blah2= []*5
+#      pipes[0] = packet
+
+      print pipe
       radio.stopListening()
-      radio.openWritingPipe(pipes[0])
+      radio.openWritingPipe(pipe)
+
+#      buffer = ['H','E','L','L','O']
+#      radio.write(buffer)
       radio.write("6")
-      print "Got 0xABCDABCD71LL"
-
-    if ( recv_buffer[0] == 2 ):
-      #0xABCDABCD61LL
-      radio.stopListening()
-      radio.openWritingPipe(pipes[1])
-      radio.write("7")
-      print "Got 0xABCDABCD61LL"
 
 
-    if ( recv_buffer[0] == 3 ):
-      #0xABCDABCD51LL
-      radio.stopListening()
-      radio.openWritingPipe(pipes[2])
-      radio.write("8")
-      print "Got 0xABCDABCD51LL"
-
-    if ( recv_buffer[0] == 4 ):
-      #0xABCDABCD41LL
-      radio.stopListening()
-      radio.openWritingPipe(pipes[3])
-      radio.write("9")
-      print "Got 0xABCDABCD41LL"
+      pipe = [0x55, 0x1c, 0x24, 0x46, 0x38]
+      radio.openWritingPipe(pipe)
+      radio.write("6")
+#551c244638
 
     time.sleep(0.1)
 
